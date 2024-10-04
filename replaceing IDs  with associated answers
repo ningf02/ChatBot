@@ -1,0 +1,35 @@
+import csv
+
+def replace_numbers_with_strings(input_csv, lookup_csv, output_csv):
+    # Read the lookup CSV file into a dictionary
+    lookup_dict = {}
+    with open(lookup_csv, 'r', encoding='latin-1') as lookup_file:
+        lookup_reader = csv.reader(lookup_file)
+        for row in lookup_reader:
+            lookup_dict[row[0]] = row[1]
+
+    # Read the input CSV file, replace numbers with strings using the lookup dictionary,
+    # and write the result to a new CSV file
+    output_rows = []
+    with open(input_csv, 'r', encoding='latin-1') as input_file:
+        input_reader = csv.reader(input_file)
+        for row in input_reader:
+            output_row = []
+            for cell in row:
+                if cell in lookup_dict:
+                    output_row.append(lookup_dict[cell])
+                else:
+                    output_row.append(cell)
+            output_rows.append(output_row)
+
+    # Write the modified data to the output CSV file
+    with open(output_csv, 'w', newline='', encoding='latin-1') as output_file:
+        output_writer = csv.writer(output_file)
+        output_writer.writerows(output_rows)
+
+# Example usage:
+
+input_file = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\Tags5+Test.csv'  # Path to the input CSV file containing data
+lookup_file = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\AnswersTest.csv'  # Path to the lookup CSV file containing data
+output_file = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\output.csv'  # Path to the output CSV file
+replace_numbers_with_strings(input_file, lookup_file, output_file)

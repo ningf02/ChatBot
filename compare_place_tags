@@ -1,0 +1,16 @@
+def compare_place_tags(arr, input_file, output_file):
+    i = 3
+    with open(output_file, 'w', newline='', encoding="latin-1") as output_file:
+        csv_writer = csv.writer(output_file)
+        for tag in arr:
+            with open(input_file, 'r', newline='', encoding="latin-1") as csv_file:
+                csv_reader = csv.reader(csv_file)
+                ID_tag_list = []  # Initialize ID_tag_list for each tag
+                csv_file.seek(0)  # Reset file pointer to the beginning
+                for row in csv_reader:
+                    if tag == row[1]:
+                        ID_tag_list.append(row[0])  # Collect matching IDs
+                for ID in ID_tag_list:
+                    modified
+                    csv_writer.writerow([tag, ID])  # Write tag and ID to output file, in reverse order
+

@@ -1,0 +1,25 @@
+
+def delete_Unused_Ids(input_file, compare_File, output_file):
+    # Set to store unique IDs from the compare file
+    compare_ids = set()
+
+    # Read compare file to get unique IDs
+    with open(compare_File, 'r', newline='', encoding="latin-1") as compare_file:
+        csv_reader = csv.reader(compare_file)
+        next(csv_reader)
+        for row in csv_reader:
+            compare_ids.add(int(row[0]))
+
+    # Open the input file for reading and output file for writing
+    with open(input_file, 'r', newline='', encoding="latin-1") as input_file, \
+         open(output_file, 'w', newline='', encoding="latin-1") as output_file:
+        csv_reader = csv.reader(input_file)
+        csv_writer = csv.writer(output_file)
+        next(csv_reader)
+
+        # Iterate through each row in the input file
+        for row in csv_reader:
+            # Check if the ID in the second column of the input file is present in compare_ids set
+            if int(row[1]) in compare_ids:  # Assuming the ID is an integer in the second column
+                # Write the whole row to the output file
+                csv_writer.writerow(row)

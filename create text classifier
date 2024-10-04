@@ -1,0 +1,125 @@
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from scipy.sparse import csr_matrix, save_npz
+from joblib import dump
+from joblib import load
+from scipy.sparse import load_npz
+
+def vectorize_data_and_save(df_merged, text_column, save_path_vectorized, save_path_vectorizer):
+    # Extract text data from the specified column
+    text_data = df_merged[text_column].tolist()
+
+    # Create an instance of CountVectorizer with limited vocabulary size
+    vectorizer = CountVectorizer(max_features=1000)
+
+    # Fit the vectorizer to the text data and transform it into BoW vectors
+    bow_matrix = vectorizer.fit_transform(text_data)
+
+    # Save the vectorized data (BoW matrix) with IDs to a CSR file
+    save_npz(save_path_vectorized, bow_matrix)
+
+    print("Vectorized data stored successfully in CSR format at:", save_path_vectorized)
+
+    # Save the vectorizer
+    dump(vectorizer, save_path_vectorizer)
+
+    print("Vectorizer saved successfully at:", save_path_vectorizer)
+
+    return bow_matrix, vectorizer
+
+def train_classifier_and_save(bow_matrix, y, save_path_classifier):
+    # Train the Multinomial Naive Bayes classifier directly on the entire dataset
+    clf = MultinomialNB()
+    clf.fit(bow_matrix, y)
+
+    # Save the trained classifier to a file
+    dump(clf, save_path_classifier)
+
+    print("Classifier saved successfully at:", save_path_classifier)
+
+    return clf
+
+def train_classifier_from_csv(csv_path_data, csv_path_tags, save_path_vectorized, save_path_vectorizer, save_path_classifier, text_column):
+    # Read the CSV file with Latin-1 encoding containing data
+    df_data = pd.read_csv(csv_path_data, encoding='latin-1')
+
+    # Read the CSV file containing tags
+    df_tags = pd.read_csv(csv_path_tags)
+
+    # Merge tags with data based on ID
+    df_merged = pd.merge(df_data, df_tags, left_on='ID', right_on='ID')
+
+    # Fill NaN values in the text column with empty strings
+    df_merged[text_column].fillna('', inplace=True)
+
+    # Drop rows with missing values in both the text column and the Tags column
+    df_merged.dropna(subset=[text_column, 'Tags'], inplace=True)
+
+    # Vectorize the data and save the vectorized data
+    bow_matrix, vectorizer = vectorize_data_and_save(df_merged, text_column, save_path_vectorized, save_path_vectorizer)
+
+    # Update y after dropping missing values
+    y = df_merged['Tags']
+
+    # Train the classifier and save it
+    trained_classifier = train_classifier_and_save(bow_matrix, y, save_path_classifier)
+
+    return trained_classifier, vectorizer
+
+# Example usage:
+csv_path_data = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\Questions(5+Score).csv'  # Path to the CSV file containing data
+csv_path_tags = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\Tags5+_Top50.csv'  # Path to the CSV file containing tags
+save_path_vectorized = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\vectorized_data.npz'  # Path where the vectorized data will be stored
+save_path_vectorizer = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\vectorizer.joblib'  # Path where the vectorizer will be stored
+save_path_classifier = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\classifier.joblib'  # Path where the trained classifier will be stored
+text_column = 'Body'  # Name of the column containing the text data
+
+# Train classifier and save vectorizer
+#trained_classifier, vectorizer = train_classifier_from_csv(csv_path_data, csv_path_tags, save_path_vectorized, save_path_vectorizer, save_path_classifier, text_column)
+
+############################################################################################
+##      testing classifier
+###########################################################################################
+def predict_tag(query, vectorizer, classifier):
+    # Transform the query using the vectorizer object
+    query_vectorized = vectorizer.transform([query])
+
+    # Predict the tag using the trained classifier
+    predicted_tag = classifier.predict(query_vectorized)
+
+    return predicted_tag[0]
+
+
+def load_classifier_and_vectorizer(classifier_path, vectorizer_path):
+    # Load the trained classifier
+    classifier = load(classifier_path)
+
+    # Load the vectorizer
+    vectorizer = load(vectorizer_path)
+
+    return classifier, vectorizer
+
+
+
+# Example usage:
+classifier_path = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\classifier.joblib'
+vectorizer_path = 'C:\\Users\\trear\\Downloads\\Y2S2\\SWENG\\5+Score\\vectorizer.joblib'
+
+
+# Load the classifier and vectorizer
+trained_classifier, vectorizer = load_classifier_and_vectorizer(classifier_path, vectorizer_path)
+
+# Example usage:
+#query = "what is the best langauge to create a website"
+#query = "how to create a button in javascript"
+#query = "how to create a function in python?"
+#query = "hwo to crete a button in javascript"
+#query = "how to make a while loop?"
+#query = "easiest language to code games?"
+query = "What is the best language for game development?"
+predicted_tag = predict_tag(query, vectorizer, trained_classifier)
+print("Predicted tag:", predicted_tag)
+
+
+
